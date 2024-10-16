@@ -99,7 +99,7 @@ namespace EJ2DocumentEditorServer.Controllers
                 return "{\"SpellCollection\":[],\"HasSpellingError\":false,\"Suggestions\":null}";
             }
         }
-		// GET api/values
+        // GET api/values
         [HttpGet]
         public IEnumerable<string> Get()
         {
@@ -144,7 +144,7 @@ namespace EJ2DocumentEditorServer.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("SystemClipboard")]
-        public string SystemClipboard([FromBody]CustomParameter param)
+        public string SystemClipboard([FromBody] CustomParameter param)
         {
             if (param.content != null && param.content != "")
             {
@@ -181,7 +181,7 @@ namespace EJ2DocumentEditorServer.Controllers
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
         [Route("RestrictEditing")]
-        public string[] RestrictEditing([FromBody]CustomRestrictParameter param)
+        public string[] RestrictEditing([FromBody] CustomRestrictParameter param)
         {
             if (param.passwordBase64 == "" && param.passwordBase64 == null)
                 return null;
@@ -208,7 +208,7 @@ namespace EJ2DocumentEditorServer.Controllers
         [Route("LoadDocument")]
         public string LoadDocument([FromForm] UploadDocument uploadDocument)
         {
-            string documentPath= Path.Combine(path, uploadDocument.DocumentName);
+            string documentPath = Path.Combine(path, uploadDocument.DocumentName);
             Stream stream = null;
             if (System.IO.File.Exists(documentPath))
             {
@@ -355,6 +355,33 @@ namespace EJ2DocumentEditorServer.Controllers
                 FileDownloadName = fileName
             };
         }
+
+        [AcceptVerbs("Post")]
+        [HttpPost]
+        [EnableCors("AllowAllOrigins")]
+        [Route("ExportSfdt")]
+        public FileStreamResult ExportSfdt(IFormCollection data)
+        {
+            string fileName = this.GetValue(data, "filename");
+            string name = fileName;
+
+            if (string.IsNullOrEmpty(name))
+            {
+                name = "Document1";
+            }
+
+            string json = this.GetValue(data, "content");
+
+            Stream document = WordDocument.Save(json, FormatType.Docx);
+
+            document.Position = 0;
+
+            return new FileStreamResult(document, "application/xml")
+            {
+                FileDownloadName = fileName
+            };
+        }
+
         private string GetValue(IFormCollection data, string key)
         {
             if (data.ContainsKey(key))
@@ -376,6 +403,15 @@ namespace EJ2DocumentEditorServer.Controllers
 
             WDocument document = new WDocument(stream, WFormatType.Docx);
             stream.Dispose();
+            return document;
+        }
+
+        private Stream GetDocumentContent(string json)
+        {
+
+            Stream document = WordDocument.Save(json, FormatType.Docx)
+                ?? throw new Exception("Document is null");
+
             return document;
         }
     }

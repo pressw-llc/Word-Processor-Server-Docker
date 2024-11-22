@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+    documenteditor:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "62870:80"
+        environment:
+            - SYNCFUSION_LICENSE_KEY=${SYNCFUSION_LICENSE_KEY}
+            - SPELLCHECK_DICTIONARY_PATH=${SPELLCHECK_DICTIONARY_PATH}
+            - SPELLCHECK_JSON_FILENAME=${SPELLCHECK_JSON_FILENAME}
+            - SPELLCHECK_CACHE_COUNT=${SPELLCHECK_CACHE_COUNT}
+        volumes:
+            - ./src:/app/src

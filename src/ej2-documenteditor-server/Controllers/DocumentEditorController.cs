@@ -11,6 +11,8 @@ using Syncfusion.EJ2.DocumentEditor;
 using WDocument = Syncfusion.DocIO.DLS.WordDocument;
 using WFormatType = Syncfusion.DocIO.FormatType;
 using Syncfusion.EJ2.SpellChecker;
+using Syncfusion.DocIORenderer;
+using Syncfusion.Pdf;
 
 namespace EJ2DocumentEditorServer.Controllers
 {
@@ -359,6 +361,153 @@ namespace EJ2DocumentEditorServer.Controllers
         [AcceptVerbs("Post")]
         [HttpPost]
         [EnableCors("AllowAllOrigins")]
+        [Route("ExportDocxToPdf")]
+        public FileStreamResult ExportDocxToPdf(IFormCollection data)
+        {
+            try
+            {
+                string docLink = this.GetValue(data, "documentLink");
+                string fileName = this.GetValue(data, "filename");
+
+                if (string.IsNullOrEmpty(docLink))
+                {
+                    Console.WriteLine("Error: Empty document link");
+                    return null;
+                }
+
+                Stream document = GetDocumentFromURL(docLink).Result;
+
+                if (document == null)
+                {
+                    Console.WriteLine("Error: Could not get document from URL");
+                    return null;
+                }
+
+                // Create new WordDocument
+                using var doc = new Syncfusion.DocIO.DLS.WordDocument(document, Syncfusion.DocIO.FormatType.Docx);
+                doc.AcceptChanges();
+
+                // Create PDF - using a MemoryStream that will stay open
+                var pdfStream = new MemoryStream();
+
+                try
+                {
+                    using var render = new DocIORenderer();
+                    render.Settings.EmbedFonts = true;
+                    using var pdfDocument = render.ConvertToPDF(doc);
+
+                    // Save to a temporary MemoryStream first
+                    using var tempStream = new MemoryStream();
+                    pdfDocument.Save(tempStream);
+                    tempStream.Position = 0;
+
+                    // Copy to our final stream
+                    tempStream.CopyTo(pdfStream);
+                    pdfStream.Position = 0;
+
+                    Console.WriteLine($"PDF size: {pdfStream.Length} bytes");
+
+                    // Ensure we have content
+                    if (pdfStream.Length == 0)
+                    {
+                        throw new Exception("Generated PDF is empty");
+                    }
+
+                    return new FileStreamResult(pdfStream, "application/pdf")
+                    {
+                        FileDownloadName = fileName + ".pdf"
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error converting to PDF: {ex.Message}");
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ExportDocxToPdf: {ex.Message}");
+                throw;
+            }
+        }
+
+        [AcceptVerbs("Post")]
+        [HttpPost]
+        [EnableCors("AllowAllOrigins")]
+        [Route("ExportSfdtToPdf")]
+        public FileStreamResult ExportSfdtToPdf(IFormCollection data)
+        {
+            try
+            {
+                string json = this.GetValue(data, "content");
+                string fileName = this.GetValue(data, "filename");
+
+                if (string.IsNullOrEmpty(json))
+                {
+                    Console.WriteLine("Error: Empty JSON content");
+                    return null;
+                }
+
+                // Convert SFDT to DOCX
+                using var docxStream = WordDocument.Save(json, FormatType.Docx);
+                docxStream.Position = 0;
+
+                // Create new WordDocument
+                using var doc = new Syncfusion.DocIO.DLS.WordDocument(docxStream, Syncfusion.DocIO.FormatType.Docx);
+                doc.AcceptChanges();
+
+                // Create PDF - using a MemoryStream that will stay open
+                var pdfStream = new MemoryStream();
+
+                try
+                {
+                    using var render = new DocIORenderer();
+                    render.Settings.EmbedFonts = true;
+                    using var pdfDocument = render.ConvertToPDF(doc);
+
+                    // Save to a temporary MemoryStream first
+                    using var tempStream = new MemoryStream();
+                    pdfDocument.Save(tempStream);
+                    tempStream.Position = 0;
+
+                    // Copy to our final stream
+                    tempStream.CopyTo(pdfStream);
+                    pdfStream.Position = 0;
+
+                    Console.WriteLine($"PDF size: {pdfStream.Length} bytes");
+
+                    // Ensure we have content
+                    if (pdfStream.Length == 0)
+                    {
+                        throw new Exception("Generated PDF is empty");
+                    }
+                }
+                finally
+                {
+                    doc.Close();
+                }
+
+                // Set response headers
+                Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}.pdf");
+                Response.Headers.Add("Content-Type", "application/pdf");
+
+                return new FileStreamResult(pdfStream, "application/pdf")
+                {
+                    FileDownloadName = $"{fileName}.pdf",
+                    EnableRangeProcessing = true  // Enable partial content support
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ExportSfdtToPdf: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
+        }
+
+        [AcceptVerbs("Post")]
+        [HttpPost]
+        [EnableCors("AllowAllOrigins")]
         [Route("ExportSfdt")]
         public FileStreamResult ExportSfdt(IFormCollection data)
         {
@@ -415,5 +564,4 @@ namespace EJ2DocumentEditorServer.Controllers
             return document;
         }
     }
-
 }

@@ -13,7 +13,12 @@ RUN apt-get update \
     libopengl0 \
     libharfbuzz0b \
     libfreetype6 \
+    fontconfig \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy and setup fonts
+COPY fonts /usr/share/fonts/truetype/custom/
+RUN fc-cache -f -v
 
 WORKDIR /app
 EXPOSE 80
@@ -38,7 +43,12 @@ RUN apt-get update \
     libopengl0 \
     libharfbuzz0b \
     libfreetype6 \
+    fontconfig \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy and setup fonts
+COPY fonts /usr/share/fonts/truetype/custom/
+RUN fc-cache -f -v
 
 RUN apt-get update -y && apt-get install libfontconfig -y
 RUN echo "deb http://httpredir.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list \ 

@@ -5,6 +5,9 @@
     <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetLockFilePath>packages.lock.json</NuGetLockFilePath>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,7 +50,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
       Version="1.17.2" />
     <PackageReference Include="Syncfusion.Compression.Net.Core" Version="*" />
-    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="27.2.2" />
+    <PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="28.1.41" />
     <PackageReference Include="Syncfusion.OfficeChart.Net.Core" Version="*" />
     <PackageReference Include="Syncfusion.EJ2.WordEditor.AspNet.Core" Version="*" />
     <PackageReference Include="Syncfusion.EJ2.SpellChecker.AspNet.Core" Version="*" />

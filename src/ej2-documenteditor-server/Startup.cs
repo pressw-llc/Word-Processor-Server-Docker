@@ -84,7 +84,6 @@ namespace EJ2DocumentEditorServer
             string license_key = Configuration["SYNCFUSION_LICENSE_KEY"];
             if (license_key!=null && license_key!=string.Empty)
                 Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(license_key);
-            app.UseDeveloperExceptionPage();
             app.UseCors("AllowAllOrigins");
             if (env.IsDevelopment())
             {
